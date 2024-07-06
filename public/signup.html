@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up</title>
+  <link rel="icon" href="./favicon.ico" type="image/x-icon">
+
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"/>
+  <script>
+    function validateForm(event) {
+      const password = document.querySelector('input[name="password"]').value;
+      const confirmPassword = document.querySelector('input[name="confirmPassword"]').value;
+      
+      if (password !== confirmPassword) {
+        event.preventDefault();
+        alert('Passwords do not match. Please try again.');
+      }
+    }
+  </script>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="title">
+      Sign Up Form
+    </div>
+    <form action="/signup" method="POST" onsubmit="validateForm(event)">
+      <div class="field">
+        <input type="email" name="email" required>
+        <label>Email Address</label>
+      </div>
+      <div class="field">
+        <input type="password" name="password" required minlength="8">
+        <label>Choose a Password</label>
+      </div>
+      <div class="field">
+        <input type="password" name="confirmPassword" required minlength="8">
+        <label>Confirm Password</label>
+      </div>
+      <div class="field">
+        <input type="submit" value="Register">
+      </div>
+      <div class="signup-link">
+        Already a member? <a href="/login">Login now</a>
+      </div>
+    </form>
+  </div>
+</body>
+</html>

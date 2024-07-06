@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Cart</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  
+  <!-- Tailwind CSS -->
+  <link href="/css/tailwind.css" rel="stylesheet">
+  
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    #success-message {
+      display: none;
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 20px;
+      background-color: rgba(56, 161, 105, 0.8); /* Increased transparency */
+      color: white;
+      border-radius: 8px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      z-index: 1000;
+      transition: opacity 1s ease-in-out;
+      opacity: 1;
+    }
+
+    #success-message.fade-out {
+      opacity: 0;
+    }
+  </style>
+ <script>
+ document.addEventListener('DOMContentLoaded', async () => {
+    const cartContainer = document.getElementById('cart-container');
+    const exchangeRateUrl = 'https://api.exchangerate-api.com/v4/latest/USD'; // Example API endpoint
+    let exchangeRate = 450; // Default rate if API fails
+
+    // Fetch exchange rate
+    try {
+      const rateResponse = await fetch(exchangeRateUrl);
+      const rateData = await rateResponse.json();
+      exchangeRate = rateData.rates.KZT; // KZT is the currency code for Tenge
+    } catch (error) {
+      console.error('Error fetching exchange rate:', error);
+    }
+
+    try {
+        const response = await fetch('/cart-data');
+        const cartData = await response.json();
+
+        if (response.ok && cartData) {
+            if (cartData.items.length > 0) {
+                cartData.items.forEach(item => {
+                    if (item.productId) {
+                        const priceInTenge = (item.productId.price * exchangeRate).toFixed(2); // Convert price to tenge
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'border p-4 mb-2 bg-white rounded shadow';
+                        itemDiv.id = `cart-item-${item._id}`;
+                        itemDiv.innerHTML = `
+                          <div class="flex">
+                            <img src="${item.productId.image}" alt="${item.productId.name}" class="w-32 h-32 object-cover">
+                            <div class="ml-4 flex-1">
+                              <h2 class="text-xl font-semibold">${item.productId.name}</h2>
+                              <p class="text-lg text-gray-700 flex items-center space-x-2">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <span>${priceInTenge} ₸</span>
+                              </p>
+                              <p class="text-gray-500">${item.productId.description}</p>
+                              <div class="flex items-center mt-2">
+                                <button class="bg-gray-300 px-2 py-1 rounded" onclick="updateQuantity('${item._id}', -1)">-</button>
+                                <span class="mx-2">${item.quantity}</span>
+                                <button class="bg-gray-300 px-2 py-1 rounded" onclick="updateQuantity('${item._id}', 1)">+</button>
+                              </div>
+                              <button class="mt-4 bg-gradient-to-br from-[#c850c0] to-[#4158d0] text-white py-2 px-4 rounded shadow-md hover:from-[#4158d0] hover:to-[#c850c0] transition-all duration-300" onclick="showBuyForm('${item._id}')">Buy</button>
+                              <div id="buy-form-${item._id}" class="mt-4 hidden">
+                                <form onsubmit="submitBuyForm(event, '${item._id}')">
+                                  <label class="block text-gray-700">Name:</label>
+                                  <input type="text" name="name" class="w-full border rounded p-2 mb-2" required>
+                                  <label class="block text-gray-700">Address:</label>
+                                  <input type="text" name="address" class="w-full border rounded p-2 mb-2" required>
+                                  <label class="block text-gray-700">Credit Card:</label>
+                                  <input type="text" name="creditCard" class="w-full border rounded p-2 mb-2" required>
+                                  <button type="submit" class="bg-gradient-to-br from-[#c850c0] to-[#4158d0] text-white py-2 px-4 rounded shadow-md hover:from-[#4158d0] hover:to-[#c850c0] transition-all duration-300">Submit</button>
+                                </form>
+                              </div>
+                            </div>
+                          </div>
+                        `;
+                        cartContainer.appendChild(itemDiv);
+                    } else {
+                        console.error('Invalid item in cart:', item);
+                    }
+                });
+            } else {
+                cartContainer.innerHTML = '<p>Your cart is empty.</p>';
+            }
+        } else {
+            cartContainer.innerHTML = `<p>Failed to load cart data: ${cartData.message}</p>`;
+        }
+    } catch (error) {
+        console.error('Error: ', error);
+        cartContainer.innerHTML = `<p>An error occurred while fetching cart data: ${error.message}</p>`;
+    }
+});
+
+async function updateQuantity(itemId, change) {
+  try {
+    const response = await fetch('/cart/update-quantity', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ itemId, change }),
+    });
+
+    if (response.ok) {
+      window.location.reload();
+    } else {
+      console.error('Failed to update quantity');
+    }
+  } catch (error) {
+    console.error('Error updating quantity:', error);
+  }
+}
+
+async function submitBuyForm(event, itemId) {
+  event.preventDefault();
+  const formData = new FormData(event.target);
+  const data = {
+    itemId: itemId,
+    name: formData.get('name'),
+    address: formData.get('address'),
+    creditCard: formData.get('creditCard'),
+  };
+
+  try {
+    const response = await fetch('/buy-item', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (response.ok) {
+      document.getElementById(`cart-item-${itemId}`).remove();
+      showSuccessMessage('Purchase successful!');
+    } else {
+      console.error('Failed to process purchase');
+    }
+  } catch (error) {
+    console.error('Error processing purchase:', error);
+  }
+}
+
+function showBuyForm(itemId) {
+    const form = document.getElementById(`buy-form-${itemId}`);
+    form.classList.toggle('hidden');
+}
+
+function showSuccessMessage(message) {
+    const successMessage = document.getElementById('success-message');
+    successMessage.innerText = message;
+    successMessage.style.display = 'block';
+    setTimeout(() => {
+        successMessage.classList.add('fade-out');
+    }, 4000);
+    setTimeout(() => {
+        successMessage.style.display = 'none';
+        successMessage.classList.remove('fade-out');
+    }, 5000);
+}
+</script>
+</head>
+<body class="bg-gray-100">
+  <header class="bg-gradient-to-br from-[#c850c0] to-[#4158d0] text-white py-4">
+    <div class="container mx-auto flex justify-between items-center border-b border-gray-700">
+      <h1 class="text-2xl font-bold">Your Cart</h1>
+      <nav class="flex items-center space-x-4">
+        <a href="/" class="bg-gradient-to-br from-[#c850c0] to-[#4158d0] text-white py-2 px-4 rounded-md shadow-md hover:from-[#4158d0] hover:to-[#c850c0] transition-all duration-300 flex items-center space-x-2">
+          <i class="fas fa-store mr-2"></i>
+          <span>Continue Shopping</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container mx-auto mt-8">
+    <div id="cart-container" class="grid grid-cols-1 gap-4">
+      <!-- Cart items will be dynamically inserted here -->
+    </div>
+    <div id="success-message">Purchase successful!</div>
+  </main>
+</body>
+</html>

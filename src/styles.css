@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles */
+.container {
+  @apply flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-100 to-gray-300;
+}
+
+.form-container {
+  @apply bg-white p-8 rounded-lg shadow-lg w-full max-w-sm relative;
+}
+
+.tab-list {
+  @apply flex border-b mb-4;
+}
+
+.tab {
+  @apply flex-1 text-center py-2 cursor-pointer transition-colors duration-500 ease-in-out;
+}
+
+.tab.active {
+  @apply text-red-500 border-b-2 border-red-500;
+}
+
+.tab-content {
+  @apply mt-6;
+}
+
+.hidden {
+  @apply hidden;
+}
+
+.block {
+  @apply block;
+}
+
+.btn {
+  @apply bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600;
+}
+
+.input-form {
+  @apply block w-full px-3 py-2 border border-gray-300 rounded-md mb-4;
+}
+
+.input-hidden {
+  @apply hidden;
+}
+
+.input-visible {
+  @apply block opacity-100 transition-opacity duration-500 ease-in-out;
+}
+
+.input-hidden-focused {
+  @apply border-red-500;
+}
+
+.link-forgot-pass {
+  @apply text-gray-500 text-sm float-left transition-opacity duration-500 ease-in-out;
+}
+
+.terms-and-cons {
+  @apply text-gray-500 text-sm mt-4;
+}
+
+.d-none {
+  @apply hidden;
+}
+
+.d-block {
+  @apply block;
+}
